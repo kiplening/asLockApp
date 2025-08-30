@@ -29,21 +29,25 @@ public class MainPresenterImpl implements MainPresenter,MainInteracter.onLoginLi
     public void checkPromission() {
         status = mainInteracter.getStatus();
         mainInteracter.getAll(appList);
-        Log.d("test"," "+ appList.size());
+        Log.d("AppLockDebug","App list size: "+ appList.size());
         int currentVersion = android.os.Build.VERSION.SDK_INT;
+        Log.d("AppLockDebug","Android version: " + currentVersion);
         if (currentVersion > 20) {
-            if (!isNoSwitch()) {
+            boolean hasPermission = isNoSwitch();
+            Log.d("AppLockDebug","Has Usage Access permission: " + hasPermission);
+            if (!hasPermission) {
+                Log.d("AppLockDebug","Requesting permission");
                 mainView.RequestPromission();
-
             } else {
+                Log.d("AppLockDebug","Permission granted, showing list");
                 appList = mainInteracter.getAll(appList);
                 mainView.showList(appList,status);
-
             }
+        } else {
+            Log.d("AppLockDebug","Old Android version, showing list directly");
+            mainInteracter.getAll(appList);
+            mainView.showList(appList,status);
         }
-        mainInteracter.getAll(appList);
-        mainView.showList(appList,status);
-
     }
 
     @Override

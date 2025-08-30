@@ -30,8 +30,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import butterknife.ButterKnife;
-import butterknife.InjectView;
 
 public class MainActivity extends BaseActivity implements MainView {
 
@@ -41,9 +39,7 @@ public class MainActivity extends BaseActivity implements MainView {
     private ArrayList<String> lockList = MainApplication.getLockList();
 
     //private ListView myList;
-    @InjectView(R.id.list)
     ListView myList;
-    @InjectView(R.id.settings)
     Button setting;
     private MainPresenter presenter;
 
@@ -55,7 +51,8 @@ public class MainActivity extends BaseActivity implements MainView {
     @Override
     protected void initViews(Bundle savedInstanceState) {
         setContentView(R.layout.activity_main);
-        ButterKnife.inject(this);
+        myList = findViewById(R.id.list);
+        setting = findViewById(R.id.settings);
         presenter.checkPromission();
         setting.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -80,7 +77,42 @@ public class MainActivity extends BaseActivity implements MainView {
     }
 
     public boolean isUserApp(PackageInfo pInfo) {
-        return (!isSystemApp(pInfo) && !isSystemUpdateApp(pInfo));
+        // Check if it's a regular user-installed app
+        boolean isNonSystemApp = (!isSystemApp(pInfo) && !isSystemUpdateApp(pInfo));
+        
+        // Check if it has launcher activities (can be launched by user)
+        boolean hasLauncherIntent = false;
+        try {
+            Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
+            mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+            mainIntent.setPackage(pInfo.packageName);
+            List activities = getPackageManager().queryIntentActivities(mainIntent, 0);
+            hasLauncherIntent = activities != null && activities.size() > 0;
+        } catch (Exception e) {
+            Log.d("AppLockDebug", "Exception checking launcher for " + pInfo.packageName + ": " + e.getMessage());
+        }
+        
+        // Check if it's installed in user space (not system partition)
+        boolean isInUserSpace = false;
+        try {
+            String sourceDir = pInfo.applicationInfo.sourceDir;
+            isInUserSpace = sourceDir != null && (
+                sourceDir.startsWith("/data/app/") ||
+                sourceDir.startsWith("/mnt/expand/") ||
+                sourceDir.startsWith("/sdcard/")
+            );
+        } catch (Exception e) {
+            // Ignore
+        }
+        
+        boolean shouldInclude = isNonSystemApp || hasLauncherIntent || isInUserSpace;
+        
+        // Log for debugging - show ALL packages being evaluated
+        Log.d("AppLockDebug", "Evaluating " + pInfo.packageName + ": nonSystem=" + isNonSystemApp + 
+              ", hasLauncher=" + hasLauncherIntent + ", inUserSpace=" + isInUserSpace + 
+              ", included=" + shouldInclude + ", sourceDir=" + pInfo.applicationInfo.sourceDir);
+              
+        return shouldInclude;
     }
 
     public boolean isLocked(PackageInfo pInfo, ArrayList<App> lockedApps) {
@@ -151,10 +183,11 @@ public class MainActivity extends BaseActivity implements MainView {
 
     @Override
     public void showList(ArrayList<App> lockedApps, String status) {
+        Log.d("AppLockDebug", "showList called with " + lockedApps.size() + " locked apps, status: " + status);
 
         Toast.makeText(this,
                 String.format(Locale.US,"http://%s/status","localhost:8081") + "---hello",
-                Toast.LENGTH_SHORT);
+                Toast.LENGTH_SHORT).show();
         if (status.equals("error")) {
             ContentValues cv = new ContentValues();
             cv.put("status", "true");
@@ -164,9 +197,12 @@ public class MainActivity extends BaseActivity implements MainView {
         ArrayList<String> appList = new ArrayList<>();
         List<PackageInfo> packages = getPackageManager()
                 .getInstalledPackages(0);
+        Log.d("AppLockDebug", "Total packages found: " + packages.size());
+        int userAppCount = 0;
         for (int i = 0; i < packages.size(); i++) {
             PackageInfo packageInfo = packages.get(i);
             if (isUserApp(packageInfo)) {
+                userAppCount++;
                 appList.add(packageInfo.packageName);
                 Map<String, Object> map = new HashMap<>();
                 map.put("info", "installed app");
@@ -185,10 +221,11 @@ public class MainActivity extends BaseActivity implements MainView {
 
                 //lockList.add(packageInfo.applicationInfo.packageName);
                 listItems.add(map);
-                Log.i("test", packageInfo.applicationInfo.loadLabel(
+                Log.i("AppLockDebug", "Added user app: " + packageInfo.applicationInfo.loadLabel(
                         getPackageManager()).toString());
             }
         }
+        Log.d("AppLockDebug", "Found " + userAppCount + " user apps, created " + listItems.size() + " list items");
         //myList = (ListView) findViewById(R.id.list);
         listViewAdapter = new ListViewAdapter(this, listItems);
         myList.setAdapter(listViewAdapter);

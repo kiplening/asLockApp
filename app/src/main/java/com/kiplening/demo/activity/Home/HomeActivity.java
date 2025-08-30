@@ -22,8 +22,6 @@ import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import butterknife.ButterKnife;
-import butterknife.InjectView;
 
 /**
  * Created by MOON on 4/17/2016.
@@ -33,7 +31,7 @@ public class HomeActivity extends BaseActivity implements HomeView {
     private Activity act;
     private HomePresenter presenter;
     private String password ;
-    @InjectView(R.id.edit) EditText edit;
+    EditText edit;
 
     @Override
     protected void initVariables() {
@@ -45,7 +43,7 @@ public class HomeActivity extends BaseActivity implements HomeView {
     @Override
     protected void initViews(Bundle savedInstanceState) {
         setContentView(R.layout.activity_unlock);
-        ButterKnife.inject(this);
+        edit = findViewById(R.id.edit);
         edit.setFocusable(true);
         edit.setFocusableInTouchMode(true);
         edit.requestFocus();

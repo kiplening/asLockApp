@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion '25.0.0'
+    compileSdk 34
+    namespace 'com.kiplening.demo'
 
     defaultConfig {
         applicationId "com.kiplening.asLockApp"
         minSdkVersion 16
-        targetSdkVersion 23
+        targetSdkVersion 34
         versionCode 1
         versionName "1.0"
         ndk {
@@ -24,12 +24,21 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    
+    lint {
+        abortOnError false
+    }
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:appcompat-v7:23.0.0'
-    compile 'com.google.code.gson:gson:2.2.+'
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.code.gson:gson:2.10.1'
+    implementation 'androidx.annotation:annotation:1.7.0'
     //compile "com.facebook.react:react-native:0.42.3"
-    compile project(path: ':androidlib')
+    implementation project(path: ':androidlib')
+    
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 }

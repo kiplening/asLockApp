@@ -19,8 +19,6 @@ import com.kiplening.androidlib.activity.BaseActivity;
 
 import java.util.ArrayList;
 
-import butterknife.ButterKnife;
-import butterknife.InjectView;
 
 /**
  * Created by MOON on 1/22/2016.
@@ -28,10 +26,10 @@ import butterknife.InjectView;
 public class SettingActivity extends BaseActivity{
     private String dataBaseName = "kiplening";
 
-    @InjectView(R.id.checkBox) CheckBox isOpen;
-    @InjectView(R.id.email) TextView email;
-    @InjectView(R.id.pwd) TextView pwd;
-    @InjectView(R.id.about) TextView about;
+    CheckBox isOpen;
+    TextView email;
+    TextView pwd;
+    TextView about;
     //@InjectView(R.layout.setting_email) View inputEmail;
     private LayoutInflater layoutInflater;
     private DataBaseUtil dataBaseUtil;
@@ -53,7 +51,10 @@ public class SettingActivity extends BaseActivity{
     @Override
     protected void initViews(Bundle savedInstanceState) {
         setContentView(R.layout.activity_setting);
-        ButterKnife.inject(this);
+        isOpen = findViewById(R.id.checkBox);
+        email = findViewById(R.id.email);
+        pwd = findViewById(R.id.pwd);
+        about = findViewById(R.id.about);
         //final View inputEmail = layoutInflater.inflate(R.layout.setting_email, null);
 
 
